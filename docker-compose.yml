@@ -1,37 +1,46 @@
-version: "3.8"
-
+version: '3.7'
 
 services:
   bitwarden:
+    image: bitwarden/server:latest
     container_name: bitwarden
-    image: vaultwarden/server:latest
-    restart: unless-stopped
+    environment:
+      - ADMIN_TOKEN=your_admin_token
+      - DB_TYPE=mssql
+      - DB_SERVER=bitwarden-db
+      - DB_USERNAME=sa
+      - DB_PASSWORD=your_db_password
+      - DB_NAME=bitwarden
+      - globalSettings__baseServiceUri__vault=https://vault.yourdomain.com
+      - globalSettings__baseServiceUri__api=https://api.yourdomain.com
+      - globalSettings__baseServiceUri__identity=https://identity.yourdomain.com
     depends_on:
-      - database
-    environment:
-      DATABASE_URL: "postgres://bitwarden:password@database:5432/bitwarden"
+      - bitwarden-db
+      - bitwarden-redis
     ports:
-      - "1818:80"
+      - 80:80
+      - 443:443
     volumes:
-      - ./bw-data:/data
+      - bitwarden-data:/data
+    restart: unless-stopped
 
-  database:
+  bitwarden-db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
     container_name: bitwarden-db
-    image: postgres:16
-    restart: unless-stopped
     environment:
-      POSTGRES_DB: bitwarden
-      POSTGRES_USER: bitwarden
-      POSTGRES_PASSWORD: password
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=your_db_password
     volumes:
-      - ./pg-data:/var/lib/postgresql/data
-
-
-  redis:
-    container_name: bitwarden-redis
-    image: redis:latest
+      - bitwarden-db-data:/var/opt/mssql
     restart: unless-stopped
-    command: redis-server --save 60 1 --loglevel warning
-    volumes:
-      - ./redis-data:/data
+
+  bitwarden-redis:
+    image: redis:6
+    container_name: bitwarden-redis
+    restart: unless-stopped
+
+volumes:
+  bitwarden-data:
+  bitwarden-db-data:
+
 
