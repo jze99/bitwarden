@@ -1,0 +1,37 @@
+version: "3.8"
+
+
+services:
+  bitwarden:
+    container_name: bitwarden
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: "postgres://bitwarden:password@database:5432/bitwarden"
+    ports:
+      - "1818:80"
+    volumes:
+      - ./bw-data:/data
+
+  database:
+    container_name: bitwarden-db
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bitwarden
+      POSTGRES_USER: bitwarden
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+
+
+  redis:
+    container_name: bitwarden-redis
+    image: redis:latest
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - ./redis-data:/data
+
