@@ -1,33 +1,34 @@
 version: '3.7'
 
 services:
-  # Контейнер для базы данных MySQL
+  # Контейнер для базы данных PostgreSQL
   bitwarden-db:
-    image: mysql:5.7
+    image: postgres:13
     container_name: bitwarden-db
     environment:
-      - MYSQL_ROOT_PASSWORD=StrongP@ssword1234  # Задайте ваш сильный пароль для root
-      - MYSQL_DATABASE=bitwarden               # Имя базы данных для Bitwarden
+      - POSTGRES_USER=bitwarden  # Имя пользователя для PostgreSQL
+      - POSTGRES_PASSWORD=StrongP@ssword1234  # Пароль для PostgreSQL
+      - POSTGRES_DB=bitwarden  # Имя базы данных для Bitwarden
     volumes:
-      - bitwarden-db-data:/var/lib/mysql       # Персистентное хранилище данных базы данных
-    restart: unless-stopped                    # Перезапуск контейнера при сбоях
+      - bitwarden-db-data:/var/lib/postgresql/data  # Персистентное хранилище данных базы данных
+    restart: unless-stopped  # Перезапуск контейнера при сбоях
 
   # Контейнер для Redis
   bitwarden-redis:
     image: redis:6
     container_name: bitwarden-redis
-    restart: unless-stopped                    # Перезапуск контейнера при сбоях
+    restart: unless-stopped  # Перезапуск контейнера при сбоях
 
   # Основной контейнер Bitwarden
   bitwarden:
     image: bitwarden/server:latest
     container_name: bitwarden
     environment:
-                  # Замените на ваш реальный токен администратора
-      - DB_TYPE=mysql                           # Указываем MySQL в качестве базы данных
-      - DB_SERVER=bitwarden-db                  # Имя хоста базы данных (ссылаемся на контейнер с базой данных)
-      - DB_USERNAME=root                        # Имя пользователя для MySQL (root)
-      - DB_PASSWORD=StrongP@ssword1234          # Пароль для MySQL
+      - ADMIN_TOKEN=your_admin_token            # Замените на ваш реальный токен администратора
+      - DB_TYPE=postgresql                      # Указываем PostgreSQL в качестве базы данных
+      - DB_SERVER=bitwarden-db                  # Имя хоста базы данных (ссылаемся на контейнер с PostgreSQL)
+      - DB_USERNAME=bitwarden                    # Имя пользователя для PostgreSQL
+      - DB_PASSWORD=StrongP@ssword1234          # Пароль для PostgreSQL
       - DB_NAME=bitwarden                       # Имя базы данных для Bitwarden
     ports:
       - 80:80                                   # HTTP доступ
