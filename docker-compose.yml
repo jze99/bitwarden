@@ -1,46 +1,44 @@
 version: '3.7'
 
 services:
+  # Контейнер для базы данных MySQL
+  bitwarden-db:
+    image: mysql:5.7
+    container_name: bitwarden-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=StrongP@ssword1234  # Задайте ваш сильный пароль для root
+      - MYSQL_DATABASE=bitwarden               # Имя базы данных для Bitwarden
+    volumes:
+      - bitwarden-db-data:/var/lib/mysql       # Персистентное хранилище данных базы данных
+    restart: unless-stopped                    # Перезапуск контейнера при сбоях
+
+  # Контейнер для Redis
+  bitwarden-redis:
+    image: redis:6
+    container_name: bitwarden-redis
+    restart: unless-stopped                    # Перезапуск контейнера при сбоях
+
+  # Основной контейнер Bitwarden
   bitwarden:
     image: bitwarden/server:latest
     container_name: bitwarden
     environment:
-      - ADMIN_TOKEN=your_admin_token
-      - DB_TYPE=mssql
-      - DB_SERVER=bitwarden-db
-      - DB_USERNAME=sa
-      - DB_PASSWORD=your_db_password
-      - DB_NAME=bitwarden
-      - globalSettings__baseServiceUri__vault=https://vault.yourdomain.com
-      - globalSettings__baseServiceUri__api=https://api.yourdomain.com
-      - globalSettings__baseServiceUri__identity=https://identity.yourdomain.com
-    depends_on:
-      - bitwarden-db
-      - bitwarden-redis
+                  # Замените на ваш реальный токен администратора
+      - DB_TYPE=mysql                           # Указываем MySQL в качестве базы данных
+      - DB_SERVER=bitwarden-db                  # Имя хоста базы данных (ссылаемся на контейнер с базой данных)
+      - DB_USERNAME=root                        # Имя пользователя для MySQL (root)
+      - DB_PASSWORD=StrongP@ssword1234          # Пароль для MySQL
+      - DB_NAME=bitwarden                       # Имя базы данных для Bitwarden
     ports:
-      - 80:80
-      - 443:443
+      - 80:80                                   # HTTP доступ
+      - 443:443                                 # HTTPS доступ
     volumes:
-      - bitwarden-data:/data
-    restart: unless-stopped
-
-  bitwarden-db:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: bitwarden-db
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=your_db_password
-    volumes:
-      - bitwarden-db-data:/var/opt/mssql
-    restart: unless-stopped
-
-  bitwarden-redis:
-    image: redis:6
-    container_name: bitwarden-redis
-    restart: unless-stopped
+      - bitwarden-data:/data                   # Персистентное хранилище данных Bitwarden
+    depends_on:
+      - bitwarden-db                            # Зависит от базы данных
+      - bitwarden-redis                         # Зависит от Redis
+    restart: unless-stopped                    # Перезапуск контейнера при сбоях
 
 volumes:
-  bitwarden-data:
   bitwarden-db-data:
-
-
+  bitwarden-data:
